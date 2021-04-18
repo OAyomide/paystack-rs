@@ -1,0 +1,16 @@
+[package]
+name = "paystack-rs"
+version = "0.1.0"
+authors = ["Ayomide Onigbinde <onigbindeayomide@gmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+reqwest = { version = "0.11", features = ["json", "blocking"] }
+serde = {version="1.0.125", features=["derive"]}
+serde_json = "1.0.64"
+
+[[bin]]
+name="paystack-bin"
+path="src/bin.rs"
