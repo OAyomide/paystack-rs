@@ -5,17 +5,11 @@ fn main() {
 }
 
 fn testing_stuff() {
-    let paystack = paystack_rs::Paystack {
-        bearer_key: "bla bla".to_string(),
-        Transaction: Transaction {
-            email: "oayomide@enyata.com".to_string(),
-            amount: 1000,
-            ..Default::default()
-        },
+    let paystack = paystack_rs::Paystack::new("bla bla bla ".to_string());
+    let body = paystack_rs::TransactionBody {
+        amount: 10,
+        email: "oayomide@enyata.com".to_string(),
         ..Default::default()
     };
-
-    paystack
-        .Transaction
-        .initialize_transaction(paystack.bearer_key);
+    let ps = paystack.transaction.initialize_transaction(body);
 }
