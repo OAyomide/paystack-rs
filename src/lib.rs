@@ -87,19 +87,61 @@ pub struct Transaction {
 // dealing with lifetime issues. Personal rule: avoid &str as best as you can.
 impl Transaction {
     pub fn initialize_transaction(&self, body: TransactionBody) -> Result<Response, String> {
+        let base_url = "https://api.paystack.co/transaction/initialize".to_string();
+
+        let res = self.make_post_request(base_url, body);
+        return res;
+    }
+
+    pub fn verify_transaction(&self, reference: String) -> Result<Response, String> {
         let base_url = "https://api.paystack.co".to_string();
-        let endpoint = "/transaction/initialize".to_string();
+        let full_url = format!("{}/transaction/verify/:{}", base_url, reference.to_string());
+        let result = self.make_get_request(full_url);
+        return result;
+    }
+
+    fn make_get_request(&self, url: String) -> Result<Response, String> {
         let reqwest_client = Client::new();
-        let tx_body = serde_json::to_string(&body).expect("Error serializing body into JSON");
-        let formatted_bearer = format!("Bearer {}", self.bearer_key.to_string());
-        println!("Formatted header is: {:?}", formatted_bearer);
+        let formatted_err_msg = format!(
+            "[PAYSTACK ERROR]: Error making GET request to url: {}",
+            url.to_string()
+        );
+        let formatted_bearer = format!("Bearer {}", self.bearer_key.clone());
         let res = reqwest_client
-            .post(format!("{}{}", base_url, endpoint))
+            .get(url)
+            .header(AUTHORIZATION, formatted_bearer)
+            .send()
+            .expect(formatted_err_msg.as_str());
+
+        match res.status() {
+            StatusCode::OK => return Ok(res),
+            StatusCode::BAD_REQUEST => return Err("Bad request. Please check the body".to_string()),
+            StatusCode::INTERNAL_SERVER_ERROR => {
+                return Err("An error occured on the paystack server: please try again".to_string())
+            }
+            _ => return Ok(res),
+        }
+    }
+
+    fn make_post_request<T>(&self, url: String, body: T) -> Result<Response, String>
+    where
+        T: std::fmt::Debug + Serialize,
+    {
+        let reqwest_client = Client::new();
+        let formatted_err_msg = format!(
+            "[PAYSTACK ERROR]: Error making POST request to paystack with URL: {} and body: {:?}",
+            url, body
+        );
+        let formatted_bearer = format!("Bearer {}", self.bearer_key.clone());
+        let serialized_body =
+            serde_json::to_string(&body).expect("Error serializing POST request body");
+        let res = reqwest_client
+            .post(url)
             .header(AUTHORIZATION, formatted_bearer)
             .header(CONTENT_TYPE, "application/json".to_string())
-            .body(tx_body)
+            .body(serialized_body)
             .send()
-            .expect("Error initializing paystack request");
+            .expect(formatted_err_msg.as_str());
 
         match res.status() {
             StatusCode::UNAUTHORIZED => {
@@ -122,32 +164,5 @@ impl Transaction {
                 return Ok(res);
             }
         };
-    }
-
-    pub fn verify_transaction(&self, reference: String) -> Result<Response, String> {
-        let base_url = "https://api.paystack.co".to_string();
-        let full_url = format!("{}/transaction/verify/:{}", base_url, reference.to_string());
-
-        let client = Client::new();
-        let token = format!("Bearer {}", self.bearer_key);
-        let res = client
-            .get(full_url)
-            .header(AUTHORIZATION, token)
-            .send()
-            .expect("Error verifying transaction from paystack");
-
-        match res.status() {
-            StatusCode::OK => {
-                println!("Ok, the transaction checks out");
-                return Ok(res);
-            }
-            StatusCode::BAD_REQUEST => {
-                return Err(
-                    "Bad request. Please check that you're passing the correct parameters"
-                        .to_string(),
-                );
-            }
-            _ => return Ok(res);
-        }
     }
 }
