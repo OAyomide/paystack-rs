@@ -3,8 +3,8 @@ use reqwest::{
     header::{AUTHORIZATION, CONTENT_TYPE},
     StatusCode,
 };
-use serde::{Deserialize, Serialize};
-use serde_json::from_value;
+use serde::Serialize;
+use std::fmt::Debug;
 
 #[cfg(test)]
 mod tests {
@@ -125,7 +125,7 @@ impl Transaction {
 
     fn make_post_request<T>(&self, url: String, body: T) -> Result<Response, String>
     where
-        T: std::fmt::Debug + Serialize,
+        T: Debug + Serialize,
     {
         let reqwest_client = Client::new();
         let formatted_err_msg = format!(
