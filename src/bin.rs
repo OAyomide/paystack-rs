@@ -6,7 +6,7 @@ fn main() {
 
 fn testing_stuff() {
     let paystack = paystack_rs::Paystack::new("bla bla bla ".to_string());
-    let body = paystack_rs::TransactionBody {
+    let body = paystack_rs::InitializeTransactionBody {
         amount: 10,
         email: "oayomide@enyata.com".to_string(),
         ..Default::default()

@@ -1,3 +1,4 @@
+use chrono::{prelude::DateTime, Utc};
 use reqwest::{
     blocking::{Client, Response},
     header::{AUTHORIZATION, CONTENT_TYPE},
@@ -37,14 +38,15 @@ impl Default for Currency {
     }
 }
 
-impl std::fmt::Display for TransactionBody {
+impl std::fmt::Display for InitializeTransactionBody {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(f, "{}", self)
     }
 }
 
+/// struct passed to initiatialize a transaction.
 #[derive(Debug, Default, Serialize)]
-pub struct TransactionBody {
+pub struct InitializeTransactionBody {
     pub email: String,
     pub amount: i128, // tbh, not sure what integer type i should use here. but pretty sure you cannot go wrong with i128
     pub currency: Option<Currency>,
@@ -60,6 +62,17 @@ pub struct TransactionBody {
     pub bearer: Option<ChargesBearer>,
 }
 
+/// struct ListTransactionsQuery
+#[derive(Serialize)]
+pub struct ListTransactionsQueryBody {
+    pub per_page: Option<i64>,
+    pub page: Option<i64>,
+    pub customer: Option<i64>,
+    pub from: Option<DateTime<Utc>>,
+    pub to: Option<DateTime<Utc>>,
+    pub amount: Option<i128>,
+}
+
 #[derive(Default)]
 pub struct Paystack {
     // pub bearer_key: String,
@@ -68,9 +81,10 @@ pub struct Paystack {
 
 impl Paystack {
     pub fn new(key: String) -> Paystack {
+        let formatted_bearer = format!("Bearer {}", key);
         Paystack {
             transaction: Transaction {
-                bearer_key: key,
+                bearer_auth: formatted_bearer.to_string(),
                 ..Default::default()
             },
         }
@@ -79,25 +93,87 @@ impl Paystack {
 
 #[derive(Default)]
 pub struct Transaction {
-    bearer_key: String,
+    bearer_auth: String,
 }
 
 // WHY DO I KEEP USING .to_string() everywhere when i could just use &str?
 // well because I honestly wish to appease rustc as best as i can. this means i do not want to start
 // dealing with lifetime issues. Personal rule: avoid &str as best as you can.
 impl Transaction {
-    pub fn initialize_transaction(&self, body: TransactionBody) -> Result<Response, String> {
+    /// initialize a transaction.
+    pub fn initialize_transaction(
+        &self,
+        body: InitializeTransactionBody,
+    ) -> Result<Response, String> {
         let base_url = "https://api.paystack.co/transaction/initialize".to_string();
 
         let res = self.make_post_request(base_url, body);
         return res;
     }
 
+    /// verify a transaction. it takes an argument reference which is the reference_id of a transaction you want to verify
     pub fn verify_transaction(&self, reference: String) -> Result<Response, String> {
         let base_url = "https://api.paystack.co".to_string();
         let full_url = format!("{}/transaction/verify/:{}", base_url, reference.to_string());
         let result = self.make_get_request(full_url);
         return result;
+    }
+
+    /// list_transactions lists all the transactions available
+    pub fn list_transactions(&self, body: ListTransactionsQueryBody) -> Result<Response, String> {
+        let full_url = "https://api.paystack.co/transaction";
+        let reqwest_client = Client::new();
+        let res = reqwest_client
+            .get(full_url)
+            .header(AUTHORIZATION, self.bearer_auth.clone())
+            .query(&[
+                ("per_page".to_string(), body.per_page),
+                ("page".to_string(), body.page),
+                ("customer".to_string(), body.customer),
+            ])
+            .query(&[("from".to_string(), body.from, "to".to_string(), body.to)])
+            .send()
+            .expect("Error listing transactions. Please make sure you're doing the right thing");
+        match res.status() {
+            StatusCode::OK => return Ok(res),
+            StatusCode::BAD_REQUEST => return Err("Bad request. Please check the body".to_string()),
+            StatusCode::INTERNAL_SERVER_ERROR => {
+                return Err("An error occured on the paystack server: please try again".to_string())
+            }
+            _ => return Ok(res),
+        }
+    }
+
+    pub fn fetch_transaction(&self, transaction_id: i64) -> Result<Response, String> {
+        let reqwest_client = Client::new();
+        let url = format!("https://api.paystack.co/transaction/{}", transaction_id);
+        let res = reqwest_client
+            .get(url)
+            .header(AUTHORIZATION, self.bearer_auth.clone())
+            .send()
+            .expect("Error fetching all transactions");
+
+        match res.status() {
+            StatusCode::UNAUTHORIZED => {
+                println!(
+                    "Oops! Unauthorized request. Please ensure you've set the correct headers"
+                );
+                return Err("Unauthorized request. please check header values".to_string());
+            }
+            StatusCode::BAD_REQUEST => return Err(
+                "Bad request. Please check whatever you're passing in the request. Seems broken"
+                    .to_string(),
+            ),
+            StatusCode::OK => {
+                println!("Yay!! you got it!!");
+                return Ok(res);
+            }
+            _ => {
+                // the below is meant as a light joke.. chill out pls
+                println!("Dunno... Looks Ok but since its not an error i specially check for, here is your result, man... or woman... or they/them");
+                return Ok(res);
+            }
+        };
     }
 
     fn make_get_request(&self, url: String) -> Result<Response, String> {
@@ -106,10 +182,9 @@ impl Transaction {
             "[PAYSTACK ERROR]: Error making GET request to url: {}",
             url.to_string()
         );
-        let formatted_bearer = format!("Bearer {}", self.bearer_key.clone());
         let res = reqwest_client
             .get(url)
-            .header(AUTHORIZATION, formatted_bearer)
+            .header(AUTHORIZATION, self.bearer_auth.clone())
             .send()
             .expect(formatted_err_msg.as_str());
 
@@ -132,12 +207,12 @@ impl Transaction {
             "[PAYSTACK ERROR]: Error making POST request to paystack with URL: {} and body: {:?}",
             url, body
         );
-        let formatted_bearer = format!("Bearer {}", self.bearer_key.clone());
+
         let serialized_body =
             serde_json::to_string(&body).expect("Error serializing POST request body");
         let res = reqwest_client
             .post(url)
-            .header(AUTHORIZATION, formatted_bearer)
+            .header(AUTHORIZATION, self.bearer_auth.clone())
             .header(CONTENT_TYPE, "application/json".to_string())
             .body(serialized_body)
             .send()
