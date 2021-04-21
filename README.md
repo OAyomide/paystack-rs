@@ -9,32 +9,32 @@ Currently, there are methods for every transactions endpoint. Anything apart fro
 Some things to be done (Endpoints) are:
 
 - [x] Transactions
-- [] Transactions splits
-- [] Customers
-- [] Dedicated NUBAN
-- [] Subaccounts
-- [] Plans
-- [] Subscription
-- [] Products
-- [] Payment pages
-- [] Invoices
-- [] Settlement
-- [] Transfer recipients
-- [] Transfers
-- [] Transfers Control
-- [] Bulk Charges
-- [] Control Panel
-- [] Charge
-- [] Dispute
-- [] Refunds
-- [] Verifications
-- [] Miscellaneous
+- [ ] Transactions splits
+- [ ] Customers
+- [ ] Dedicated NUBAN
+- [ ] Subaccounts
+- [ ] Plans
+- [ ] Subscription
+- [ ] Products
+- [ ] Payment pages
+- [ ] Invoices
+- [ ] Settlement
+- [ ] Transfer recipients
+- [ ] Transfers
+- [ ] Transfers Control
+- [ ] Bulk Charges
+- [ ] Control Panel
+- [ ] Charge
+- [ ] Dispute
+- [ ] Refunds
+- [ ] Verifications
+- [ ] Miscellaneous
 
 Other things are:
 
-- [] Tests
-- [] Support reading Bearer access token and similar sensitive information from .env file
-- [] Proper comments and documentation
+- [ ] Tests (i know!! tests are important! 🙃)
+- [ ] Support reading Bearer access token and similar sensitive information from .env file
+- [ ] Proper comments and documentation
 
 ## How to use
 
