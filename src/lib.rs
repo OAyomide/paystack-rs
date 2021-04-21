@@ -5,6 +5,7 @@ use reqwest::{
     StatusCode,
 };
 use serde::Serialize;
+use serde_json::Value;
 use std::fmt::Debug;
 
 #[cfg(test)]
@@ -20,6 +21,13 @@ pub enum Currency {
     NGN,
     GHS,
     USD,
+}
+
+#[derive(Debug, Serialize)]
+pub enum Status {
+    FAILED,
+    SUCCESS,
+    ABANDONED,
 }
 
 #[derive(Debug, Serialize)]
@@ -71,6 +79,65 @@ pub struct ListTransactionsQueryBody {
     pub from: Option<DateTime<Utc>>,
     pub to: Option<DateTime<Utc>>,
     pub amount: Option<i128>,
+}
+
+#[derive(Serialize, Debug)]
+pub struct ChargeAuthorizationBody {
+    pub amount: String,
+    pub email: String,
+    pub authorization_code: String,
+    pub reference: Option<String>,
+    pub currency: Option<Currency>,
+    pub metadata: Option<Value>,
+    /// from the docs:
+    /// Send us 'card' or 'bank' or 'card','bank' as an array to specify what options to show the user paying
+    pub channels: Option<Vec<String>>,
+    pub subaccount: Option<String>,
+    pub transaction_charge: Option<i128>,
+    pub bearer: Option<ChargesBearer>,
+    /// If you are making a scheduled charge call, it is a good idea to queue them so the processing system does not get overloaded causing transaction processing errors. Send queue:true to take advantage of our queued charging.
+    pub queue: Option<bool>,
+}
+
+#[derive(Debug, Serialize)]
+pub struct TransactionsTotal {
+    pub per_page: Option<i64>,
+    pub page: Option<i64>,
+    pub from: Option<DateTime<Utc>>,
+    pub to: Option<DateTime<Utc>>,
+}
+
+#[derive(Debug, Serialize)]
+pub struct CheckAuthorizationBody {
+    pub amount: String,
+    pub email: String,
+    pub authorization_code: String,
+    pub currency: Option<Currency>,
+}
+
+#[derive(Debug, Serialize)]
+pub struct PartialDebitBody {
+    pub amount: String,
+    pub email: String,
+    pub authorization_code: String,
+    pub currency: Option<Currency>,
+    pub reference: Option<String>,
+    pub at_least: Option<String>,
+}
+
+#[derive(Debug, Serialize)]
+pub struct ExportTransactionsBody {
+    pub per_page: Option<i64>,
+    pub page: Option<i64>,
+    pub from: Option<DateTime<Utc>>,
+    pub to: Option<DateTime<Utc>>,
+    pub customer: Option<i64>,
+    pub status: Option<Status>,
+    pub currency: Option<Currency>,
+    pub amount: Option<String>,
+    pub settled: Option<bool>,
+    pub settlement: Option<i64>,
+    pub payment_page: Option<i64>,
 }
 
 #[derive(Default)]
@@ -174,6 +241,98 @@ impl Transaction {
                 return Ok(res);
             }
         };
+    }
+
+    pub fn charge_authorization(
+        &self,
+        params: ChargeAuthorizationBody,
+    ) -> Result<Response, String> {
+        let full_url = "https://api.paystack.co/transaction/charge_authorization".to_string();
+        let res = self.make_post_request(full_url, params);
+        return res;
+    }
+    /// ⚠️ Warning You shouldn't use this endpoint to check a card for sufficient funds if you are going to charge the user immediately. This is because we hold funds when this endpoint is called which can lead to an insufficient funds error.
+    pub fn check_authorization(&self, param: ChargeAuthorizationBody) -> Result<Response, String> {
+        let full_url = "https://api.paystack.co/transaction/check_authorization".to_string();
+        let res = self.make_post_request(full_url, param);
+        return res;
+    }
+
+    pub fn view_transaction_timeline(&self, id: String) -> Result<Response, String> {
+        let full_url = format!("https://api.paystack.co/transaction/timeline/{}", id).to_string();
+        let res = self.make_get_request(full_url);
+        return res;
+    }
+
+    pub fn transactions_total(
+        &self,
+        params: Option<TransactionsTotal>,
+    ) -> Result<Response, String> {
+        let full_url = "https://api.paystack.co/transaction/totals".to_string();
+        let reqwest_client = Client::new();
+        let params = params.expect("Error unwrapping params");
+        let res = reqwest_client
+            .get(full_url)
+            .query(&[
+                ("perPage".to_string(), params.per_page.unwrap()),
+                ("page".to_string(), params.page.unwrap()),
+            ])
+            .header(AUTHORIZATION, self.bearer_auth.clone())
+            .send()
+            .expect("Error fetching transactions total");
+
+        match res.status() {
+            StatusCode::OK => return Ok(res),
+            StatusCode::BAD_REQUEST => return Err("Bad request. Please check the body".to_string()),
+            StatusCode::INTERNAL_SERVER_ERROR => {
+                return Err("An error occured on the paystack server: please try again".to_string())
+            }
+            _ => return Ok(res),
+        }
+    }
+
+    pub fn export_transactions(
+        &self,
+        params: Option<ExportTransactionsBody>,
+    ) -> Result<Response, String> {
+        let full_url = "https://api.paystack.co/transaction/export".to_string();
+        let params = params.expect("Error unwrapping params passed to export transactions");
+        let reqwest_client = Client::new();
+        let res = reqwest_client
+            .get(full_url)
+            .query(&[
+                ("perPage".to_string(), params.per_page.unwrap()),
+                ("page".to_string(), params.page.unwrap()),
+                ("customer".to_string(), params.customer.unwrap()),
+                ("payment_page".to_string(), params.payment_page.unwrap()),
+                ("settlement".to_string(), params.settlement.unwrap()),
+            ])
+            .query(&[
+                ("from".to_string(), params.from.unwrap()),
+                ("to".to_string(), params.to.unwrap()),
+            ])
+            .query(&[("status".to_string(), params.status.unwrap())])
+            .query(&[("amount".to_string(), params.amount.unwrap())])
+            .query(&[("currency".to_string(), params.currency.unwrap())])
+            .query(&[("settled".to_string(), params.settled.unwrap())])
+            .header(AUTHORIZATION, self.bearer_auth.clone())
+            .send()
+            .expect("Error fetching transactions total");
+
+        match res.status() {
+            StatusCode::OK => return Ok(res),
+            StatusCode::BAD_REQUEST => return Err("Bad request. Please check the body".to_string()),
+            StatusCode::INTERNAL_SERVER_ERROR => {
+                return Err("An error occured on the paystack server: please try again".to_string())
+            }
+            _ => return Ok(res),
+        }
+    }
+
+    pub fn partial_debit(&self, body: PartialDebitBody) -> Result<Response, String> {
+        let full_url = "https://api.paystack.co/transaction/partial_debit".to_string();
+        let res = self.make_post_request(full_url, body);
+        return res;
     }
 
     fn make_get_request(&self, url: String) -> Result<Response, String> {
