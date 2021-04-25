@@ -369,11 +369,13 @@ impl Transaction {
 
         let serialized_body =
             serde_json::to_string(&body).expect("Error serializing POST request body");
+        let mp: std::collections::HashMap<String, String> = std::collections::HashMap::new();
         let res = reqwest_client
             .post(url)
             .header(AUTHORIZATION, self.bearer_auth.clone())
             .header(CONTENT_TYPE, "application/json".to_string())
             .body(serialized_body)
+            // .json(&mp)
             .send()
             .expect(formatted_err_msg.as_str());
 
