@@ -1,9 +1,13 @@
+pub mod customers;
 pub mod transactions;
+pub mod transactions_split;
 
 use transactions::Transaction;
+use transactions_split::TransactionSplit;
 #[derive(Default)]
 pub struct Paystack {
     pub transaction: Transaction,
+    pub transaction_split: TransactionSplit,
 }
 
 impl Paystack {
@@ -13,6 +17,9 @@ impl Paystack {
             transaction: Transaction {
                 bearer_auth: formatted_bearer.to_string(),
                 ..Default::default()
+            },
+            transaction_split: TransactionSplit {
+                bearer_auth: formatted_bearer.to_string(),
             },
         }
     }

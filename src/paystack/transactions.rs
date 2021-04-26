@@ -1,26 +1,20 @@
+use crate::utils::*;
 use chrono::{prelude::DateTime, Utc};
 use reqwest::{
     blocking::{Client, Response},
-    header::{AUTHORIZATION, CONTENT_TYPE},
+    header::AUTHORIZATION,
     StatusCode,
 };
 use serde::Serialize;
 use serde_json::Value;
 use std::fmt::Debug;
 
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn it_works() {
-        assert_eq!(2 + 2, 4);
-    }
-}
-
 #[derive(Debug, Serialize)]
 pub enum Currency {
     NGN,
     GHS,
     USD,
+    ZAR,
 }
 
 #[derive(Debug, Serialize)]
@@ -52,6 +46,10 @@ impl std::fmt::Display for InitializeTransactionBody {
     }
 }
 
+const CHARGE_AUTHORIZATION_URL: &str = "https://api.paystack.co/transaction/charge_authorization";
+const INITIALIZE_TRANSACTION_URL: &str = "https://api.paystack.co/transaction/initialize";
+const PAYSTACK_BASE_URL: &str = "https://api.paystack.co";
+const TRANSACTION_URL: &str = "https://api.paystack.co/transaction";
 /// struct passed to initiatialize a transaction.
 #[derive(Debug, Default, Serialize)]
 pub struct InitializeTransactionBody {
@@ -154,26 +152,30 @@ impl Transaction {
         &self,
         body: InitializeTransactionBody,
     ) -> Result<Response, String> {
-        let base_url = "https://api.paystack.co/transaction/initialize".to_string();
-
-        let res = self.make_post_request(base_url, body);
+        let res = make_post_request(
+            self.bearer_auth.clone(),
+            INITIALIZE_TRANSACTION_URL.to_owned(),
+            body,
+        );
         return res;
     }
 
     /// verify a transaction. it takes an argument reference which is the reference_id of a transaction you want to verify
     pub fn verify_transaction(&self, reference: String) -> Result<Response, String> {
-        let base_url = "https://api.paystack.co".to_string();
-        let full_url = format!("{}/transaction/verify/:{}", base_url, reference.to_string());
-        let result = self.make_get_request(full_url);
+        let full_url = format!(
+            "{}/transaction/verify/:{}",
+            PAYSTACK_BASE_URL.to_owned(),
+            reference.to_string()
+        );
+        let result = make_get_request(self.bearer_auth.clone(), full_url);
         return result;
     }
 
     /// list_transactions lists all the transactions available
     pub fn list_transactions(&self, body: ListTransactionsQueryBody) -> Result<Response, String> {
-        let full_url = "https://api.paystack.co/transaction";
         let reqwest_client = Client::new();
         let res = reqwest_client
-            .get(full_url)
+            .get(TRANSACTION_URL.to_owned())
             .header(AUTHORIZATION, self.bearer_auth.clone())
             .query(&[
                 ("per_page".to_string(), body.per_page),
@@ -195,7 +197,7 @@ impl Transaction {
 
     pub fn fetch_transaction(&self, transaction_id: i64) -> Result<Response, String> {
         let reqwest_client = Client::new();
-        let url = format!("https://api.paystack.co/transaction/{}", transaction_id);
+        let url = format!("{}/{}", TRANSACTION_URL.to_owned(), transaction_id);
         let res = reqwest_client
             .get(url)
             .header(AUTHORIZATION, self.bearer_auth.clone())
@@ -229,20 +231,23 @@ impl Transaction {
         &self,
         params: ChargeAuthorizationBody,
     ) -> Result<Response, String> {
-        let full_url = "https://api.paystack.co/transaction/charge_authorization".to_string();
-        let res = self.make_post_request(full_url, params);
+        let res = make_post_request(
+            self.bearer_auth.clone(),
+            CHARGE_AUTHORIZATION_URL.to_owned(),
+            params,
+        );
         return res;
     }
     /// ⚠️ Warning You shouldn't use this endpoint to check a card for sufficient funds if you are going to charge the user immediately. This is because we hold funds when this endpoint is called which can lead to an insufficient funds error.
     pub fn check_authorization(&self, param: ChargeAuthorizationBody) -> Result<Response, String> {
-        let full_url = "https://api.paystack.co/transaction/check_authorization".to_string();
-        let res = self.make_post_request(full_url, param);
+        let full_url = CHARGE_AUTHORIZATION_URL.to_owned();
+        let res = make_post_request(self.bearer_auth.clone(), full_url, param);
         return res;
     }
 
     pub fn view_transaction_timeline(&self, id: String) -> Result<Response, String> {
-        let full_url = format!("https://api.paystack.co/transaction/timeline/{}", id).to_string();
-        let res = self.make_get_request(full_url);
+        let full_url = format!("{}/timeline/{}", TRANSACTION_URL.to_owned(), id).to_string();
+        let res = make_get_request(self.bearer_auth.clone(), full_url);
         return res;
     }
 
@@ -250,7 +255,7 @@ impl Transaction {
         &self,
         params: Option<TransactionsTotal>,
     ) -> Result<Response, String> {
-        let full_url = "https://api.paystack.co/transaction/totals".to_string();
+        let full_url = format!("{}/totals", TRANSACTION_URL.to_owned());
         let reqwest_client = Client::new();
         let params = params.expect("Error unwrapping params");
         let res = reqwest_client
@@ -277,7 +282,7 @@ impl Transaction {
         &self,
         params: Option<ExportTransactionsBody>,
     ) -> Result<Response, String> {
-        let full_url = "https://api.paystack.co/transaction/export".to_string();
+        let full_url = format!("{}/export", TRANSACTION_URL.to_owned());
         let params = params.expect("Error unwrapping params passed to export transactions");
         let reqwest_client = Client::new();
         let res = reqwest_client
@@ -312,74 +317,8 @@ impl Transaction {
     }
 
     pub fn partial_debit(&self, body: PartialDebitBody) -> Result<Response, String> {
-        let full_url = "https://api.paystack.co/transaction/partial_debit".to_string();
-        let res = self.make_post_request(full_url, body);
+        let full_url = format!("{}/partial_debit", TRANSACTION_URL.to_owned());
+        let res = make_post_request(self.bearer_auth.clone(), full_url, body);
         return res;
-    }
-
-    fn make_get_request(&self, url: String) -> Result<Response, String> {
-        let reqwest_client = Client::new();
-        let formatted_err_msg = format!(
-            "[PAYSTACK ERROR]: Error making GET request to url: {}",
-            url.to_string()
-        );
-        let res = reqwest_client
-            .get(url)
-            .header(AUTHORIZATION, self.bearer_auth.clone())
-            .send()
-            .expect(formatted_err_msg.as_str());
-
-        match res.status() {
-            StatusCode::OK => return Ok(res),
-            StatusCode::BAD_REQUEST => return Err("Bad request. Please check the body".to_string()),
-            StatusCode::INTERNAL_SERVER_ERROR => {
-                return Err("An error occured on the paystack server: please try again".to_string())
-            }
-            _ => return Ok(res),
-        }
-    }
-
-    fn make_post_request<T>(&self, url: String, body: T) -> Result<Response, String>
-    where
-        T: Debug + Serialize,
-    {
-        let reqwest_client = Client::new();
-        let formatted_err_msg = format!(
-            "[PAYSTACK ERROR]: Error making POST request to paystack with URL: {} and body: {:?}",
-            url, body
-        );
-
-        let serialized_body =
-            serde_json::to_string(&body).expect("Error serializing POST request body");
-        let res = reqwest_client
-            .post(url)
-            .header(AUTHORIZATION, self.bearer_auth.clone())
-            .header(CONTENT_TYPE, "application/json".to_string())
-            .body(serialized_body)
-            // .json(&mp)
-            .send()
-            .expect(formatted_err_msg.as_str());
-
-        match res.status() {
-            StatusCode::UNAUTHORIZED => {
-                println!(
-                    "Oops! Unauthorized request. Please ensure you've set the correct headers"
-                );
-                return Err("Unauthorized request. please check header values".to_string());
-            }
-            StatusCode::BAD_REQUEST => return Err(
-                "Bad request. Please check whatever you're passing in the request. Seems broken"
-                    .to_string(),
-            ),
-            StatusCode::OK => {
-                println!("Yay!! you got it!!");
-                return Ok(res);
-            }
-            _ => {
-                // the below is meant as a light joke.. chill out pls
-                println!("Dunno... Looks Ok but since its not an error i specially check for, here is your result, man... or woman... or they/them");
-                return Ok(res);
-            }
-        };
     }
 }
