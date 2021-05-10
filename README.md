@@ -9,9 +9,9 @@ Currently, there are methods for every transactions endpoint. Anything apart fro
 Some things to be done (Endpoints) are:
 
 - [x] Transactions
-- [ ] Transactions splits
-- [ ] Customers
-- [ ] Dedicated NUBAN
+- [x] Transactions splits
+- [x] Customers
+- [x] Dedicated NUBAN
 - [ ] Subaccounts
 - [ ] Plans
 - [ ] Subscription
