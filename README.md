@@ -26,7 +26,7 @@ Some things to be done (Endpoints) are:
 - [ ] Control Panel
 - [ ] Charge
 - [ ] Dispute
-- [ ] Refunds
+- [x] Refunds
 - [ ] Verifications
 - [ ] Miscellaneous
 
