@@ -122,7 +122,7 @@ impl Customer {
         }
     }
     /// Get details of a customer on your integration.
-    /// takes a parameter emai_or_code. An email or customer code for the customer you want to fetch
+    /// takes a parameter email_or_code. An email or customer code for the customer you want to fetch
     pub fn fetch_customer(&self, email_or_code: &str) -> Result<Response, String> {
         let url = format!("{}/{}", CUSTOMER_URL.to_owned(), email_or_code);
         let res = make_get_request(self.bearer_auth.clone(), url);
