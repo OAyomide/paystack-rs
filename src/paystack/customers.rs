@@ -1,9 +1,6 @@
 use crate::utils::*;
 use chrono::{prelude::DateTime, Utc};
-use reqwest::{
-    blocking::{Client, Response},
-    StatusCode,
-};
+use reqwest::blocking::Response;
 use serde::Serialize;
 use serde_json::Value;
 use std::fmt::Debug;
@@ -71,12 +68,6 @@ pub enum RiskAction {
     Deny,
 }
 
-// impl Default for RiskAction {
-//     fn default() -> Self {
-//         RiskAction::Default
-//     }
-// }
-
 #[derive(Debug, Serialize)]
 pub struct WhitelistOrBlacklistCustomerBody<'a> {
     /// Customer's code, or email address
@@ -95,37 +86,29 @@ const CUSTOMER_URL: &str = "https://api.paystack.co/customer";
 impl Customer {
     /// Create a customer on your integration
     pub fn create_customer(&self, body: CreateCustomerBody) -> Result<Response, String> {
-        let res = make_post_request(self.bearer_auth.clone(), CUSTOMER_URL.to_owned(), body);
+        let res = make_request(
+            self.bearer_auth.clone(),
+            CUSTOMER_URL.to_owned(),
+            Some(body),
+            REQUEST::POST,
+        );
         return res;
     }
 
     /// List customers available on your integration.
-    pub fn list_customers(&self, params: ListCustomersParams) -> Result<Response, String> {
-        let reqwest_client = Client::new();
-        let res = reqwest_client
-            .get(CUSTOMER_URL.to_owned())
-            .query(&[
-                ("perPage", params.per_page.unwrap()),
-                ("page", params.page.unwrap()),
-            ])
-            .query(&[("from", params.from.unwrap()), ("to", params.to.unwrap())])
-            .send()
-            .expect("Error listing all customers");
-
-        match res.status() {
-            StatusCode::OK => return Ok(res),
-            StatusCode::BAD_REQUEST => return Err("Bad request. Please check the body".to_string()),
-            StatusCode::INTERNAL_SERVER_ERROR => {
-                return Err("An error occured on the paystack server: please try again".to_string())
-            }
-            _ => return Ok(res),
-        }
+    pub fn list_customers(&self, queries: Option<ListCustomersParams>) -> Result<Response, String> {
+        let res = make_get_request(
+            self.bearer_auth.to_owned(),
+            CUSTOMER_URL.to_owned(),
+            queries,
+        );
+        return res;
     }
     /// Get details of a customer on your integration.
     /// takes a parameter email_or_code. An email or customer code for the customer you want to fetch
     pub fn fetch_customer(&self, email_or_code: &str) -> Result<Response, String> {
         let url = format!("{}/{}", CUSTOMER_URL.to_owned(), email_or_code);
-        let res = make_get_request(self.bearer_auth.clone(), url);
+        let res = make_get_request(self.bearer_auth.clone(), url, None::<String>);
         return res;
     }
 
@@ -135,7 +118,7 @@ impl Customer {
         body: UpdateCustomerBody,
     ) -> Result<Response, String> {
         let url = format!("{}/{}", CUSTOMER_URL.to_owned(), code);
-        let res = make_post_request(self.bearer_auth.clone(), url, body);
+        let res = make_request(self.bearer_auth.clone(), url, Some(body), REQUEST::PUT);
         return res;
     }
 
@@ -145,7 +128,7 @@ impl Customer {
         body: ValidateCustomerBody,
     ) -> Result<Response, String> {
         let url = format!("{}/{}/identification", CUSTOMER_URL.to_owned(), code);
-        let res = make_post_request(self.bearer_auth.clone(), url, body);
+        let res = make_request(self.bearer_auth.clone(), url, Some(body), REQUEST::POST);
         return res;
     }
 
@@ -155,7 +138,7 @@ impl Customer {
         body: WhitelistOrBlacklistCustomerBody,
     ) -> Result<Response, String> {
         let url = format!("{}/set_risk_action", CUSTOMER_URL.to_owned());
-        let res = make_post_request(self.bearer_auth.clone(), url, body);
+        let res = make_request(self.bearer_auth.clone(), url, Some(body), REQUEST::POST);
         return res;
     }
 
@@ -165,7 +148,7 @@ impl Customer {
         body: DeactivateAuthorizationBody,
     ) -> Result<Response, String> {
         let url = format!("{}/deactivate_authorization", CUSTOMER_URL.to_owned());
-        let res = make_post_request(self.bearer_auth.clone(), url, body);
+        let res = make_request(self.bearer_auth.clone(), url, Some(body), REQUEST::POST);
         return res;
     }
 }

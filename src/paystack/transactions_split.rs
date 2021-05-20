@@ -1,13 +1,8 @@
-use crate::{
-    prelude::Currency,
-    utils::{make_get_request, make_post_request},
-};
+use std::fmt::Debug;
+
+use crate::{prelude::Currency, utils::*};
 use chrono::{DateTime, Utc};
-use reqwest::{
-    blocking::{Client, Response},
-    header::AUTHORIZATION,
-    StatusCode,
-};
+use reqwest::blocking::Response;
 use serde::Serialize;
 
 const SPLIT_PAYMENT_URL: &str = "https://api.paystack.co/split";
@@ -55,7 +50,7 @@ pub struct CreateSplitPaymentBody<'a> {
     pub bearer_subaccount: &'a str,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize)]
 pub struct ListOrSearchSplitsParams<'a> {
     /// The name of the split
     pub name: &'a str,
@@ -102,52 +97,39 @@ pub struct RemoveSplitSubaccountBody<'a> {
 impl TransactionSplit {
     /// Create a split payment on your integration
     pub fn create_split(&self, body: CreateSplitPaymentBody) -> Result<Response, String> {
-        let res = make_post_request(self.bearer_auth.clone(), SPLIT_PAYMENT_URL.to_owned(), body);
+        let res = make_request(
+            self.bearer_auth.clone(),
+            SPLIT_PAYMENT_URL.to_owned(),
+            Some(body),
+            REQUEST::POST,
+        );
         return res;
     }
 
     /// List/search for the transaction splits available on your integration.
     pub fn list_or_search_splits(
         &self,
-        params: ListOrSearchSplitsParams,
+        params: Option<ListOrSearchSplitsParams>,
     ) -> Result<Response, String> {
-        let reqwest_client = Client::new();
-        let res = reqwest_client
-            .get(SPLIT_PAYMENT_URL.to_owned())
-            .header(AUTHORIZATION, self.bearer_auth.clone())
-            .query(&[
-                ("name", params.name),
-                ("sort_by", params.sorted_by.unwrap()),
-            ])
-            .query(&[("active", params.active)])
-            .query(&[
-                ("perPage", params.per_page.unwrap()),
-                ("page", params.page.unwrap()),
-            ])
-            .query(&[("from", params.from.unwrap()), ("to", params.to.unwrap())])
-            .send()
-            .expect("Error listing or searching split payments");
-        match res.status() {
-            StatusCode::OK => return Ok(res),
-            StatusCode::BAD_REQUEST => return Err("Bad request. Please check the body".to_string()),
-            StatusCode::INTERNAL_SERVER_ERROR => {
-                return Err("An error occured on the paystack server: please try again".to_string())
-            }
-            _ => return Ok(res),
-        }
+        let res = make_get_request(
+            self.bearer_auth.clone(),
+            SPLIT_PAYMENT_URL.to_owned(),
+            params,
+        );
+        return res;
     }
 
     /// Get details of a split on your integration.
     pub fn fetch_split(&self, id: &str) -> Result<Response, String> {
         let url = format!("{}/{}", SPLIT_PAYMENT_URL.to_owned(), id);
-        let res = make_get_request(self.bearer_auth.clone(), url);
+        let res = make_get_request(self.bearer_auth.clone(), url, None::<String>);
         return res;
     }
 
     /// Update a transaction split details on your integration
     pub fn update_split(&self, id: &str, body: UpdateSplitBody) -> Result<Response, String> {
         let url = format!("{}/{}", SPLIT_PAYMENT_URL.to_owned(), id);
-        let res = make_post_request(self.bearer_auth.clone(), url, body);
+        let res = make_request(self.bearer_auth.clone(), url, Some(body), REQUEST::PUT);
         return res;
     }
 
@@ -158,7 +140,7 @@ impl TransactionSplit {
         body: AddOrUpdateSplitSubaccountBody,
     ) -> Result<Response, String> {
         let url = format!("{}/{}/subaccount/add", SPLIT_PAYMENT_URL.to_owned(), id);
-        let res = make_post_request(self.bearer_auth.clone(), url, body);
+        let res = make_request(self.bearer_auth.clone(), url, Some(body), REQUEST::POST);
         return res;
     }
 
@@ -169,7 +151,7 @@ impl TransactionSplit {
         body: RemoveSplitSubaccountBody,
     ) -> Result<Response, String> {
         let url = format!("{}/{}/subaccount/remove", SPLIT_PAYMENT_URL.to_owned(), id);
-        let res = make_post_request(self.bearer_auth.clone(), url, body);
+        let res = make_request(self.bearer_auth.clone(), url, Some(body), REQUEST::POST);
         return res;
     }
 }

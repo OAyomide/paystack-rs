@@ -1,7 +1,4 @@
-use crate::{
-    prelude::Currency,
-    utils::*
-};
+use crate::{prelude::Currency, utils::*};
 use chrono::{prelude::DateTime, Utc};
 use reqwest::{
     blocking::{Client, Response},
@@ -47,38 +44,26 @@ const REFUND_URL: &str = "https://api.paystack.co/refund";
 impl Refund {
     /// Initiate a refund on your integration
     pub fn initiate_refund(&self, body: CreateRefundBody) -> Result<Response, String> {
-        let res = make_post_request(self.bearer_auth.clone(), REFUND_URL.to_owned(), body);
+        let res = make_request(
+            self.bearer_auth.clone(),
+            REFUND_URL.to_owned(),
+            Some(body),
+            REQUEST::POST,
+        );
         return res;
     }
 
     /// List refunds available on your integration.
-    pub fn list_refunds(&self, params: ListRefundsParams) -> Result<Response, String> {
-        let reqwest_client = Client::new();
-        let res = reqwest_client
-            .get(REFUND_URL.to_owned())
-            .query(&[
-                ("perPage", params.per_page.unwrap()),
-                ("page", params.page.unwrap()),
-            ])
-            .query(&[("from", params.from.unwrap()), ("to", params.to.unwrap())])
-            .send()
-            .expect("Error listing all refunds");
-
-        match res.status() {
-            StatusCode::OK => return Ok(res),
-            StatusCode::BAD_REQUEST => return Err("Bad request. Please check the body".to_string()),
-            StatusCode::INTERNAL_SERVER_ERROR => {
-                return Err("An error occured on the paystack server: please try again".to_string())
-            }
-            _ => return Ok(res),
-        }
+    pub fn list_refunds(&self, params: Option<ListRefundsParams>) -> Result<Response, String> {
+        let res = make_get_request(self.bearer_auth.to_owned(), REFUND_URL.to_owned(), params);
+        return res;
     }
     /// Get details of a refund on your integration.
     /// takes a parameter reference. An transaction reference for the refund you want to fetch
     pub fn fetch_refund(&self, reference: &str) -> Result<Response, String> {
         let url = format!("{}/{}", REFUND_URL.to_owned(), reference);
         println!("{}", url);
-        let res = make_get_request(self.bearer_auth.clone(), url);
+        let res = make_get_request(self.bearer_auth.clone(), url, None::<String>);
         return res;
     }
 }
