@@ -1,15 +1,10 @@
 use crate::{prelude::Currency, utils::*};
-use reqwest::{
-    blocking::{Client, Response},
-    header::{AUTHORIZATION, CONTENT_TYPE},
-    StatusCode,
-};
+use reqwest::blocking::Response;
 use serde::Serialize;
-use serde_json::to_string;
 use std::fmt::Debug;
 
 const DEDICATED_NUBAN_URL: &str = "https://api.paystack.co/dedicated_account";
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Default)]
 pub struct DedicatedNuban {
     pub(crate) bearer_auth: String,
 }
@@ -64,10 +59,11 @@ impl DedicatedNuban {
         &self,
         body: CreateDedicatedAccountBody,
     ) -> Result<Response, String> {
-        let res = make_post_request(
+        let res = make_request(
             self.bearer_auth.clone(),
             DEDICATED_NUBAN_URL.to_owned(),
-            body,
+            Some(body),
+            REQUEST::POST,
         );
         return res;
     }
@@ -94,7 +90,12 @@ impl DedicatedNuban {
     /// Deactivate a dedicated account on your integration.
     pub fn deactivate_dedicated_account(&self, id: &str) -> Result<Response, String> {
         let url = format!("{}/{}", DEDICATED_NUBAN_URL.to_owned(), id);
-        let res = make_delete_request(self.bearer_auth.clone(), url);
+        let res = make_request(
+            self.bearer_auth.clone(),
+            url,
+            None::<String>,
+            REQUEST::DELETE,
+        );
         return res;
     }
 
@@ -103,10 +104,11 @@ impl DedicatedNuban {
         &self,
         body: SplitDedicatedAccountTxBody,
     ) -> Result<Response, String> {
-        let res = make_post_request(
+        let res = make_request(
             self.bearer_auth.clone(),
             DEDICATED_NUBAN_URL.to_owned(),
-            body,
+            Some(body),
+            REQUEST::POST,
         );
         return res;
     }
@@ -115,29 +117,13 @@ impl DedicatedNuban {
         &self,
         body: RemoveSplitFromDedicatedAcctBody,
     ) -> Result<Response, String> {
-        let reqwest_client = Client::new();
-        let formatted_err_msg = format!(
-            "[PAYSTACK ERROR]: Error making GET request to url: {}",
-            DEDICATED_NUBAN_URL.to_owned()
+        let res = make_request(
+            self.bearer_auth.clone(),
+            DEDICATED_NUBAN_URL.to_owned(),
+            Some(body),
+            REQUEST::DELETE,
         );
-        let serialized_body =
-            to_string(&body).expect("Error serializing RemoveSplitFromDedicatedAcctBody");
-        let res = reqwest_client
-            .delete(DEDICATED_NUBAN_URL.to_owned())
-            .header(AUTHORIZATION, self.bearer_auth.clone())
-            .header(CONTENT_TYPE, "application/json".to_string())
-            .body(serialized_body)
-            .send()
-            .expect(formatted_err_msg.as_str());
-
-        match res.status() {
-            StatusCode::OK => return Ok(res),
-            StatusCode::BAD_REQUEST => return Err("Bad request. Please check the body".to_string()),
-            StatusCode::INTERNAL_SERVER_ERROR => {
-                return Err("An error occured on the paystack server: please try again".to_string())
-            }
-            _ => return Ok(res),
-        }
+        return res;
     }
 
     pub fn fetch_bank_providers(&self) -> Result<Response, String> {

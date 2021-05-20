@@ -152,10 +152,11 @@ impl Transaction {
         &self,
         body: InitializeTransactionBody,
     ) -> Result<Response, String> {
-        let res = make_post_request(
+        let res = make_request(
             self.bearer_auth.clone(),
             INITIALIZE_TRANSACTION_URL.to_owned(),
-            body,
+            Some(body),
+            REQUEST::POST,
         );
         return res;
     }
@@ -167,7 +168,7 @@ impl Transaction {
             PAYSTACK_BASE_URL.to_owned(),
             reference.to_string()
         );
-        let result = make_get_request(self.bearer_auth.clone(), full_url);
+        let result = make_get_request(self.bearer_auth.clone(), full_url, None::<String>);
         return result;
     }
 
@@ -231,23 +232,30 @@ impl Transaction {
         &self,
         params: ChargeAuthorizationBody,
     ) -> Result<Response, String> {
-        let res = make_post_request(
+        let res = make_request(
             self.bearer_auth.clone(),
             CHARGE_AUTHORIZATION_URL.to_owned(),
-            params,
+            Some(params),
+            REQUEST::POST,
         );
         return res;
     }
     /// ⚠️ Warning You shouldn't use this endpoint to check a card for sufficient funds if you are going to charge the user immediately. This is because we hold funds when this endpoint is called which can lead to an insufficient funds error.
     pub fn check_authorization(&self, param: ChargeAuthorizationBody) -> Result<Response, String> {
         let full_url = CHARGE_AUTHORIZATION_URL.to_owned();
-        let res = make_post_request(self.bearer_auth.clone(), full_url, param);
+        // let res = make_post_request(self.bearer_auth.clone(), full_url, param);
+        let res = make_request(
+            self.bearer_auth.clone(),
+            full_url,
+            Some(param),
+            REQUEST::POST,
+        );
         return res;
     }
 
     pub fn view_transaction_timeline(&self, id: String) -> Result<Response, String> {
         let full_url = format!("{}/timeline/{}", TRANSACTION_URL.to_owned(), id).to_string();
-        let res = make_get_request(self.bearer_auth.clone(), full_url);
+        let res = make_get_request(self.bearer_auth.clone(), full_url, None::<String>);
         return res;
     }
 
@@ -318,7 +326,12 @@ impl Transaction {
 
     pub fn partial_debit(&self, body: PartialDebitBody) -> Result<Response, String> {
         let full_url = format!("{}/partial_debit", TRANSACTION_URL.to_owned());
-        let res = make_post_request(self.bearer_auth.clone(), full_url, body);
+        let res = make_request(
+            self.bearer_auth.clone(),
+            full_url,
+            Some(body),
+            REQUEST::POST,
+        );
         return res;
     }
 }

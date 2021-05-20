@@ -1,7 +1,4 @@
-use crate::{
-    prelude::Currency,
-    utils::*
-};
+use crate::{prelude::Currency, utils::*};
 use chrono::{prelude::DateTime, Utc};
 use reqwest::{
     blocking::{Client, Response},
@@ -47,7 +44,12 @@ const REFUND_URL: &str = "https://api.paystack.co/refund";
 impl Refund {
     /// Initiate a refund on your integration
     pub fn initiate_refund(&self, body: CreateRefundBody) -> Result<Response, String> {
-        let res = make_post_request(self.bearer_auth.clone(), REFUND_URL.to_owned(), body);
+        let res = make_request(
+            self.bearer_auth.clone(),
+            REFUND_URL.to_owned(),
+            Some(body),
+            REQUEST::POST,
+        );
         return res;
     }
 
@@ -78,7 +80,7 @@ impl Refund {
     pub fn fetch_refund(&self, reference: &str) -> Result<Response, String> {
         let url = format!("{}/{}", REFUND_URL.to_owned(), reference);
         println!("{}", url);
-        let res = make_get_request(self.bearer_auth.clone(), url);
+        let res = make_get_request(self.bearer_auth.clone(), url, None::<String>);
         return res;
     }
 }

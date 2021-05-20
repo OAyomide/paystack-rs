@@ -4,9 +4,55 @@ use reqwest::{
     StatusCode,
 };
 use serde::Serialize;
+use serde_urlencoded::*;
 use std::fmt::Debug;
 
-pub fn make_post_request<T>(bearer_auth: String, url: String, body: T) -> Result<Response, String>
+pub(crate) enum REQUEST {
+    POST,
+    PUT,
+    DELETE,
+}
+
+pub(crate) fn make_get_request<T>(
+    bearer_auth: String,
+    url: String,
+    queries: Option<T>,
+) -> Result<Response, String>
+where
+    T: Serialize + Debug,
+{
+    let reqwest_client = Client::new();
+    let formatted_err_msg = format!(
+        "[PAYSTACK ERROR]: Error making GET request to url: {}",
+        url.to_string()
+    );
+    let queries = &ser::to_string(queries).unwrap();
+    let full_url = format!("{}?{}", url, queries);
+    let res = reqwest_client
+        .get(full_url)
+        .header(AUTHORIZATION, bearer_auth.to_string())
+        .send()
+        .expect(formatted_err_msg.as_str());
+
+    match res.status() {
+        StatusCode::OK => return Ok(res),
+        StatusCode::BAD_REQUEST => return Err("Bad request. Please check the body".to_string()),
+        StatusCode::INTERNAL_SERVER_ERROR => {
+            return Err("An error occured on the paystack server: please try again".to_string())
+        }
+        _ => {
+            println!("Response from google is: {:?}", res);
+            return Ok(res);
+        }
+    }
+}
+
+pub(crate) fn make_request<T>(
+    bearer_auth: String,
+    url: String,
+    body: Option<T>,
+    verb: REQUEST,
+) -> Result<Response, String>
 where
     T: Debug + Serialize,
 {
@@ -18,12 +64,16 @@ where
 
     let serialized_body =
         serde_json::to_string(&body).expect("Error serializing POST request body");
-    let res = reqwest_client
-        .post(url)
-        .header(AUTHORIZATION, bearer_auth.to_string())
+    let builder = match verb {
+        REQUEST::POST => reqwest_client.post(url),
+        REQUEST::DELETE => reqwest_client.delete(url),
+        REQUEST::PUT => reqwest_client.put(url),
+    };
+
+    let res = builder
+        .header(AUTHORIZATION, bearer_auth)
         .header(CONTENT_TYPE, "application/json".to_string())
         .body(serialized_body)
-        // .json(&mp)
         .send()
         .expect(formatted_err_msg.as_str());
 
@@ -48,26 +98,4 @@ where
             return Ok(res);
         }
     };
-}
-
-pub fn make_get_request(bearer_auth: String, url: String) -> Result<Response, String> {
-    let reqwest_client = Client::new();
-    let formatted_err_msg = format!(
-        "[PAYSTACK ERROR]: Error making GET request to url: {}",
-        url.to_string()
-    );
-    let res = reqwest_client
-        .get(url)
-        .header(AUTHORIZATION, bearer_auth.to_string())
-        .send()
-        .expect(formatted_err_msg.as_str());
-
-    match res.status() {
-        StatusCode::OK => return Ok(res),
-        StatusCode::BAD_REQUEST => return Err("Bad request. Please check the body".to_string()),
-        StatusCode::INTERNAL_SERVER_ERROR => {
-            return Err("An error occured on the paystack server: please try again".to_string())
-        }
-        _ => return Ok(res),
-    }
 }

@@ -1,6 +1,7 @@
 use paystack_rs::prelude::{InitializeTransactionBody, Paystack};
 use reqwest::Error;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
+use serde_json::Value as JSON;
 use std::result::Result;
 
 fn main() {
@@ -19,9 +20,24 @@ struct Data {
     authorization_url: String,
     access_code: String,
 }
+
+#[derive(Debug, Deserialize)]
+struct ListAllBodyResponse {
+    status: bool,
+    message: String,
+    data: Vec<JSON>,
+    meta: JSON,
+}
+#[derive(Serialize, Debug)]
+#[serde(rename_all = "camelCase")]
+struct ListAllBody {
+    per_page: String,
+    page: String,
+}
+
 fn testing_stuff() {
     // replace with a valid test keys
-    let paystack = Paystack::new("mmdmfkdfm".to_string());
+    let paystack = Paystack::new("some_key_here".to_string());
     let body = InitializeTransactionBody {
         amount: 10,
         email: "oayomide@enyata.com".to_string(),
@@ -33,5 +49,13 @@ fn testing_stuff() {
         .unwrap()
         .json();
     println!("Result: {:?}", response.unwrap());
-    // InitializeTxResponse { status: true, message: "Authorization URL created", data: Data { authorization_url: "https://checkout.paystack.com/gx9mi6ihvnw5s9s", access_code: "gx9mi6ihvnw5s9s" } }
+    let list_all_body = {};
+
+    let list_all: Result<ListAllBodyResponse, Error> = paystack
+        .subaccounts
+        .list_subaccounts(Some(list_all_body))
+        .unwrap()
+        .json();
+
+    println!("Result is: {:?}", list_all);
 }

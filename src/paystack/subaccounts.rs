@@ -1,19 +1,15 @@
-use crate::{prelude::Currency, utils::*};
+use crate::utils::*;
 use chrono::{DateTime, Utc};
-use reqwest::{
-    blocking::{Client, Response},
-    header::{AUTHORIZATION, CONTENT_TYPE},
-    StatusCode,
-};
+use reqwest::blocking::Response;
 use serde::Serialize;
-use serde_json::{to_string, Value};
-use std::fmt::Debug;
+use serde_json::Value;
+use std::{collections::HashMap, fmt::Debug};
 
 const SUBACCOUNT_URL: &str = "https://api.paystack.co/subaccount";
 
-#[derive(Debug)]
-pub struct Subaccount<'a> {
-    pub(crate) bearer_auth: &'a str,
+#[derive(Debug, Default)]
+pub struct Subaccount {
+    pub(crate) bearer_auth: String,
 }
 
 #[derive(Debug, Serialize)]
@@ -73,49 +69,39 @@ pub struct UpdateSubaccountBody<'a> {
 }
 
 /// The Subaccounts API allows you create and manage subaccounts on your integration. Subaccounts can be used to split payment between two accounts (your main account and a sub account)
-impl Subaccount<'_> {
+impl Subaccount {
     /// Create a subacount on your integration
     pub fn create_subaccount(&self, body: CreateSubaccountBody) -> Result<Response, String> {
-        let res = make_post_request(self.bearer_auth.to_owned(), SUBACCOUNT_URL.to_owned(), body);
+        let res = make_request(
+            self.bearer_auth.to_owned(),
+            SUBACCOUNT_URL.to_owned(),
+            Some(body),
+            REQUEST::POST,
+        );
         return res;
     }
 
     /// List subaccounts available on your integration.
-    pub fn list_subaccounts(
-        &self,
-        params: Option<ListSubaccountParams>,
-    ) -> Result<Response, String> {
-        let reqwest_client = Client::new();
-        let formatted_err_msg = format!(
-            "[PAYSTACK ERROR]: Error making GET request to url: {}",
-            SUBACCOUNT_URL
+    pub fn list_subaccounts<T>(&self, params: Option<T>) -> Result<Response, String>
+    where
+        T: Debug + Serialize,
+    {
+        let res = make_get_request(
+            self.bearer_auth.to_owned(),
+            SUBACCOUNT_URL.to_owned(),
+            params,
         );
-        let params = params.expect("Error unwrapping params");
-        let res = reqwest_client
-            .get(SUBACCOUNT_URL)
-            .header(AUTHORIZATION, self.bearer_auth)
-            .query(&[
-                ("perPage", params.per_page.unwrap()),
-                ("page", params.page.unwrap()),
-            ])
-            .query(&[("from", params.from.unwrap()), ("to", params.to.unwrap())])
-            .send()
-            .expect(formatted_err_msg.as_str());
-
-        match res.status() {
-            StatusCode::OK => return Ok(res),
-            StatusCode::BAD_REQUEST => return Err("Bad request. Please check the body".to_string()),
-            StatusCode::INTERNAL_SERVER_ERROR => {
-                return Err("An error occured on the paystack server: please try again".to_string())
-            }
-            _ => return Ok(res),
-        }
+        return res;
     }
 
     /// Get details of a subaccount on your integration.
     pub fn fetch_subaccount(&self, id: &str) -> Result<Response, String> {
         let url = format!("{}/{}", SUBACCOUNT_URL, id);
-        let res = make_get_request(self.bearer_auth.to_owned(), url, None::<String>);
+        let res = make_get_request(
+            self.bearer_auth.to_owned(),
+            url,
+            None::<HashMap<String, String>>,
+        );
         return res;
     }
 
@@ -125,7 +111,7 @@ impl Subaccount<'_> {
         body: UpdateSubaccountBody,
     ) -> Result<Response, String> {
         let url = format!("{}/{}", SUBACCOUNT_URL, id);
-        let res = make_put_request(self.bearer_auth.to_owned(), url, body);
+        let res = make_request(self.bearer_auth.to_owned(), url, Some(body), REQUEST::PUT);
         return res;
     }
 }
