@@ -1,12 +1,11 @@
 use crate::{prelude::Currency, utils::*};
 use chrono::{prelude::DateTime, Utc};
-use reqwest::{
-    blocking::{Client, Response},
-    StatusCode,
-};
+use reqwest::blocking::Response;
 use serde::Serialize;
+
+/// The Refunds API allows you create and manage transaction refunds
 #[derive(Default, Debug)]
-pub struct Refund {
+pub struct Refunds {
     pub(crate) bearer_auth: String,
 }
 
@@ -41,21 +40,16 @@ pub struct ListRefundsParams<'a> {
 }
 
 const REFUND_URL: &str = "https://api.paystack.co/refund";
-impl Refund {
+impl Refunds {
     /// Initiate a refund on your integration
     pub fn initiate_refund(&self, body: CreateRefundBody) -> Result<Response, String> {
-        let res = make_request(
-            self.bearer_auth.clone(),
-            REFUND_URL.to_owned(),
-            Some(body),
-            REQUEST::POST,
-        );
+        let res = make_request(&self.bearer_auth, REFUND_URL, Some(body), REQUEST::POST);
         return res;
     }
 
     /// List refunds available on your integration.
     pub fn list_refunds(&self, params: Option<ListRefundsParams>) -> Result<Response, String> {
-        let res = make_get_request(self.bearer_auth.to_owned(), REFUND_URL.to_owned(), params);
+        let res = make_get_request(&self.bearer_auth, REFUND_URL, params);
         return res;
     }
     /// Get details of a refund on your integration.
@@ -63,7 +57,7 @@ impl Refund {
     pub fn fetch_refund(&self, reference: &str) -> Result<Response, String> {
         let url = format!("{}/{}", REFUND_URL.to_owned(), reference);
         println!("{}", url);
-        let res = make_get_request(self.bearer_auth.clone(), url, None::<String>);
+        let res = make_get_request(&self.bearer_auth, &url, None::<String>);
         return res;
     }
 }

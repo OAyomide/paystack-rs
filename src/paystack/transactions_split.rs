@@ -51,6 +51,7 @@ pub struct CreateSplitPaymentBody<'a> {
 }
 
 #[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ListOrSearchSplitsParams<'a> {
     /// The name of the split
     pub name: &'a str,
@@ -98,8 +99,8 @@ impl TransactionSplit {
     /// Create a split payment on your integration
     pub fn create_split(&self, body: CreateSplitPaymentBody) -> Result<Response, String> {
         let res = make_request(
-            self.bearer_auth.clone(),
-            SPLIT_PAYMENT_URL.to_owned(),
+            &self.bearer_auth,
+            &SPLIT_PAYMENT_URL,
             Some(body),
             REQUEST::POST,
         );
@@ -111,25 +112,21 @@ impl TransactionSplit {
         &self,
         params: Option<ListOrSearchSplitsParams>,
     ) -> Result<Response, String> {
-        let res = make_get_request(
-            self.bearer_auth.clone(),
-            SPLIT_PAYMENT_URL.to_owned(),
-            params,
-        );
+        let res = make_get_request(&self.bearer_auth, SPLIT_PAYMENT_URL, params);
         return res;
     }
 
     /// Get details of a split on your integration.
     pub fn fetch_split(&self, id: &str) -> Result<Response, String> {
-        let url = format!("{}/{}", SPLIT_PAYMENT_URL.to_owned(), id);
-        let res = make_get_request(self.bearer_auth.clone(), url, None::<String>);
+        let url = format!("{}/{}", SPLIT_PAYMENT_URL, id);
+        let res = make_get_request(&self.bearer_auth, &url, None::<String>);
         return res;
     }
 
     /// Update a transaction split details on your integration
     pub fn update_split(&self, id: &str, body: UpdateSplitBody) -> Result<Response, String> {
-        let url = format!("{}/{}", SPLIT_PAYMENT_URL.to_owned(), id);
-        let res = make_request(self.bearer_auth.clone(), url, Some(body), REQUEST::PUT);
+        let url = format!("{}/{}", SPLIT_PAYMENT_URL, id);
+        let res = make_request(&self.bearer_auth, &url, Some(body), REQUEST::PUT);
         return res;
     }
 
@@ -139,8 +136,8 @@ impl TransactionSplit {
         id: &str,
         body: AddOrUpdateSplitSubaccountBody,
     ) -> Result<Response, String> {
-        let url = format!("{}/{}/subaccount/add", SPLIT_PAYMENT_URL.to_owned(), id);
-        let res = make_request(self.bearer_auth.clone(), url, Some(body), REQUEST::POST);
+        let url = format!("{}/{}/subaccount/add", SPLIT_PAYMENT_URL, id);
+        let res = make_request(&self.bearer_auth, &url, Some(body), REQUEST::POST);
         return res;
     }
 
@@ -150,8 +147,8 @@ impl TransactionSplit {
         id: &str,
         body: RemoveSplitSubaccountBody,
     ) -> Result<Response, String> {
-        let url = format!("{}/{}/subaccount/remove", SPLIT_PAYMENT_URL.to_owned(), id);
-        let res = make_request(self.bearer_auth.clone(), url, Some(body), REQUEST::POST);
+        let url = format!("{}/{}/subaccount/remove", SPLIT_PAYMENT_URL, id);
+        let res = make_request(&self.bearer_auth, &url, Some(body), REQUEST::POST);
         return res;
     }
 }

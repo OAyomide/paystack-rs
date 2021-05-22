@@ -14,8 +14,8 @@ pub(crate) enum REQUEST {
 }
 
 pub(crate) fn make_get_request<T>(
-    bearer_auth: String,
-    url: String,
+    bearer_auth: &str,
+    url: &str,
     queries: Option<T>,
 ) -> Result<Response, String>
 where
@@ -48,8 +48,8 @@ where
 }
 
 pub(crate) fn make_request<T>(
-    bearer_auth: String,
-    url: String,
+    bearer_auth: &str,
+    url: &str,
     body: Option<T>,
     verb: REQUEST,
 ) -> Result<Response, String>

@@ -7,6 +7,7 @@ use std::{collections::HashMap, fmt::Debug};
 
 const SUBACCOUNT_URL: &str = "https://api.paystack.co/subaccount";
 
+/// The Subaccounts API allows you create and manage subaccounts on your integration. Subaccounts can be used to split payment between two accounts (your main account and a sub account)
 #[derive(Debug, Default)]
 pub struct Subaccount {
     pub(crate) bearer_auth: String,
@@ -72,12 +73,7 @@ pub struct UpdateSubaccountBody<'a> {
 impl Subaccount {
     /// Create a subacount on your integration
     pub fn create_subaccount(&self, body: CreateSubaccountBody) -> Result<Response, String> {
-        let res = make_request(
-            self.bearer_auth.to_owned(),
-            SUBACCOUNT_URL.to_owned(),
-            Some(body),
-            REQUEST::POST,
-        );
+        let res = make_request(&self.bearer_auth, SUBACCOUNT_URL, Some(body), REQUEST::POST);
         return res;
     }
 
@@ -86,32 +82,25 @@ impl Subaccount {
     where
         T: Debug + Serialize,
     {
-        let res = make_get_request(
-            self.bearer_auth.to_owned(),
-            SUBACCOUNT_URL.to_owned(),
-            params,
-        );
+        let res = make_get_request(&self.bearer_auth, SUBACCOUNT_URL, params);
         return res;
     }
 
     /// Get details of a subaccount on your integration.
     pub fn fetch_subaccount(&self, id: &str) -> Result<Response, String> {
         let url = format!("{}/{}", SUBACCOUNT_URL, id);
-        let res = make_get_request(
-            self.bearer_auth.to_owned(),
-            url,
-            None::<HashMap<String, String>>,
-        );
+        let res = make_get_request(&self.bearer_auth, &url, None::<String>);
         return res;
     }
 
+    /// Update a subaccount details on your integration
     pub fn update_subaccount(
         &self,
         id: &str,
         body: UpdateSubaccountBody,
     ) -> Result<Response, String> {
         let url = format!("{}/{}", SUBACCOUNT_URL, id);
-        let res = make_request(self.bearer_auth.to_owned(), url, Some(body), REQUEST::PUT);
+        let res = make_request(&self.bearer_auth, &url, Some(body), REQUEST::PUT);
         return res;
     }
 }

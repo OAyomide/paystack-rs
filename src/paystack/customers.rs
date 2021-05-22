@@ -86,29 +86,20 @@ const CUSTOMER_URL: &str = "https://api.paystack.co/customer";
 impl Customer {
     /// Create a customer on your integration
     pub fn create_customer(&self, body: CreateCustomerBody) -> Result<Response, String> {
-        let res = make_request(
-            self.bearer_auth.clone(),
-            CUSTOMER_URL.to_owned(),
-            Some(body),
-            REQUEST::POST,
-        );
+        let res = make_request(&self.bearer_auth, CUSTOMER_URL, Some(body), REQUEST::POST);
         return res;
     }
 
     /// List customers available on your integration.
     pub fn list_customers(&self, queries: Option<ListCustomersParams>) -> Result<Response, String> {
-        let res = make_get_request(
-            self.bearer_auth.to_owned(),
-            CUSTOMER_URL.to_owned(),
-            queries,
-        );
+        let res = make_get_request(&self.bearer_auth, CUSTOMER_URL, queries);
         return res;
     }
     /// Get details of a customer on your integration.
     /// takes a parameter email_or_code. An email or customer code for the customer you want to fetch
     pub fn fetch_customer(&self, email_or_code: &str) -> Result<Response, String> {
         let url = format!("{}/{}", CUSTOMER_URL.to_owned(), email_or_code);
-        let res = make_get_request(self.bearer_auth.clone(), url, None::<String>);
+        let res = make_get_request(&self.bearer_auth, &url, None::<String>);
         return res;
     }
 
@@ -118,7 +109,7 @@ impl Customer {
         body: UpdateCustomerBody,
     ) -> Result<Response, String> {
         let url = format!("{}/{}", CUSTOMER_URL.to_owned(), code);
-        let res = make_request(self.bearer_auth.clone(), url, Some(body), REQUEST::PUT);
+        let res = make_request(&self.bearer_auth, &url, Some(body), REQUEST::PUT);
         return res;
     }
 
@@ -128,7 +119,7 @@ impl Customer {
         body: ValidateCustomerBody,
     ) -> Result<Response, String> {
         let url = format!("{}/{}/identification", CUSTOMER_URL.to_owned(), code);
-        let res = make_request(self.bearer_auth.clone(), url, Some(body), REQUEST::POST);
+        let res = make_request(&self.bearer_auth, &url, Some(body), REQUEST::POST);
         return res;
     }
 
@@ -138,7 +129,7 @@ impl Customer {
         body: WhitelistOrBlacklistCustomerBody,
     ) -> Result<Response, String> {
         let url = format!("{}/set_risk_action", CUSTOMER_URL.to_owned());
-        let res = make_request(self.bearer_auth.clone(), url, Some(body), REQUEST::POST);
+        let res = make_request(&self.bearer_auth, &url, Some(body), REQUEST::POST);
         return res;
     }
 
@@ -148,7 +139,7 @@ impl Customer {
         body: DeactivateAuthorizationBody,
     ) -> Result<Response, String> {
         let url = format!("{}/deactivate_authorization", CUSTOMER_URL.to_owned());
-        let res = make_request(self.bearer_auth.clone(), url, Some(body), REQUEST::POST);
+        let res = make_request(&self.bearer_auth, &url, Some(body), REQUEST::POST);
         return res;
     }
 }
