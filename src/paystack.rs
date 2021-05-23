@@ -3,6 +3,7 @@ pub mod charge;
 pub mod control_panel;
 pub mod customers;
 pub mod dedicated_nuban;
+pub mod disputes;
 pub mod invoices;
 pub mod payment_pages;
 pub mod plans;
@@ -21,6 +22,7 @@ use bulk_charges::BulkCharges;
 use charge::Charge;
 use control_panel::ControlPanel;
 use dedicated_nuban::DedicatedNuban;
+use disputes::Disputes;
 use invoices::Invoices;
 use payment_pages::PaymentPages;
 use plans::Plans;
@@ -54,6 +56,7 @@ pub struct Paystack {
     pub bulk_charges: BulkCharges,
     pub control_panel: ControlPanel,
     pub charge: Charge,
+    pub disputes: Disputes,
 }
 
 impl Paystack {
@@ -110,6 +113,9 @@ impl Paystack {
                 bearer_auth: formatted_bearer.to_string(),
             },
             charge: Charge {
+                bearer_auth: formatted_bearer.to_string(),
+            },
+            disputes: Disputes {
                 bearer_auth: formatted_bearer.to_string(),
             },
         }
