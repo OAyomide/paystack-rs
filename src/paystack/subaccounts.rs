@@ -3,7 +3,7 @@ use chrono::{DateTime, Utc};
 use reqwest::blocking::Response;
 use serde::Serialize;
 use serde_json::Value;
-use std::{collections::HashMap, fmt::Debug};
+use std::fmt::Debug;
 
 const SUBACCOUNT_URL: &str = "https://api.paystack.co/subaccount";
 

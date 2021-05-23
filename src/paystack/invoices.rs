@@ -41,7 +41,7 @@ pub struct CreateInvoiceBody<'a> {
 
 #[derive(Debug, Serialize)]
 pub struct ListInvoicesParams<'a> {
-    #[serde(rename = "per_page")]
+    #[serde(rename = "perPage")]
     /// Specify how many records you want to retrieve per page. If not specify we use a default value of 50.
     pub per_page: Option<i64>,
     /// Specify exactly what invoice you want to page. If not specify we use a default value of 1.

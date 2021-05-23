@@ -1,6 +1,11 @@
+pub mod bulk_charges;
+pub mod charge;
+pub mod control_panel;
 pub mod customers;
 pub mod dedicated_nuban;
+pub mod disputes;
 pub mod invoices;
+pub mod miscellaneous;
 pub mod payment_pages;
 pub mod plans;
 pub mod products;
@@ -10,9 +15,18 @@ pub mod subaccounts;
 pub mod subscription;
 pub mod transactions;
 pub mod transactions_split;
+pub mod transfer_recipients;
+pub mod transfers;
+pub mod transfers_control;
+pub mod verification;
 
+use bulk_charges::BulkCharges;
+use charge::Charge;
+use control_panel::ControlPanel;
 use dedicated_nuban::DedicatedNuban;
+use disputes::Disputes;
 use invoices::Invoices;
+use miscellaneous::Miscellaneous;
 use payment_pages::PaymentPages;
 use plans::Plans;
 use products::Products;
@@ -22,6 +36,10 @@ use subaccounts::Subaccount;
 use subscription::Subscription;
 use transactions::Transaction;
 use transactions_split::TransactionSplit;
+use transfer_recipients::TransferRecipients;
+use transfers::Transfers;
+use transfers_control::TransfersControl;
+use verification::Verification;
 
 #[derive(Default)]
 pub struct Paystack {
@@ -36,6 +54,15 @@ pub struct Paystack {
     pub payment_pages: PaymentPages,
     pub invoices: Invoices,
     pub settlements: Settlements,
+    pub transfer_recipients: TransferRecipients,
+    pub transfers: Transfers,
+    pub transfers_control: TransfersControl,
+    pub bulk_charges: BulkCharges,
+    pub control_panel: ControlPanel,
+    pub charge: Charge,
+    pub disputes: Disputes,
+    pub verification: Verification,
+    pub miscellaneous: Miscellaneous,
 }
 
 impl Paystack {
@@ -74,6 +101,33 @@ impl Paystack {
                 bearer_auth: formatted_bearer.to_string(),
             },
             settlements: Settlements {
+                bearer_auth: formatted_bearer.to_string(),
+            },
+            transfer_recipients: TransferRecipients {
+                bearer_auth: formatted_bearer.to_string(),
+            },
+            transfers: Transfers {
+                bearer_auth: formatted_bearer.to_string(),
+            },
+            transfers_control: TransfersControl {
+                bearer_auth: formatted_bearer.to_string(),
+            },
+            bulk_charges: BulkCharges {
+                bearer_auth: formatted_bearer.to_string(),
+            },
+            control_panel: ControlPanel {
+                bearer_auth: formatted_bearer.to_string(),
+            },
+            charge: Charge {
+                bearer_auth: formatted_bearer.to_string(),
+            },
+            disputes: Disputes {
+                bearer_auth: formatted_bearer.to_string(),
+            },
+            verification: Verification {
+                bearer_auth: formatted_bearer.to_string(),
+            },
+            miscellaneous: Miscellaneous {
                 bearer_auth: formatted_bearer.to_string(),
             },
         }

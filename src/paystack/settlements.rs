@@ -2,7 +2,6 @@ use crate::utils::make_get_request;
 use chrono::{DateTime, Local};
 use reqwest::blocking::Response;
 use serde::Serialize;
-use serde_json::Value as JSON;
 #[derive(Debug, Serialize)]
 pub struct FetchSettlementsBody<'a> {
     /// Specify how many records you want to retrieve per page. If not specify we use a default value of 50.

@@ -53,10 +53,9 @@ impl Refunds {
         return res;
     }
     /// Get details of a refund on your integration.
-    /// takes a parameter reference. An transaction reference for the refund you want to fetch
+    /// takes a parameter reference. A transaction reference for the refund you want to fetch
     pub fn fetch_refund(&self, reference: &str) -> Result<Response, String> {
-        let url = format!("{}/{}", REFUND_URL.to_owned(), reference);
-        println!("{}", url);
+        let url = format!("{}/{}", REFUND_URL, reference);
         let res = make_get_request(&self.bearer_auth, &url, None::<String>);
         return res;
     }
