@@ -17,6 +17,7 @@ pub mod transactions_split;
 pub mod transfer_recipients;
 pub mod transfers;
 pub mod transfers_control;
+pub mod verification;
 
 use bulk_charges::BulkCharges;
 use charge::Charge;
@@ -36,6 +37,7 @@ use transactions_split::TransactionSplit;
 use transfer_recipients::TransferRecipients;
 use transfers::Transfers;
 use transfers_control::TransfersControl;
+use verification::Verification;
 
 #[derive(Default)]
 pub struct Paystack {
@@ -57,6 +59,7 @@ pub struct Paystack {
     pub control_panel: ControlPanel,
     pub charge: Charge,
     pub disputes: Disputes,
+    pub verification: Verification,
 }
 
 impl Paystack {
@@ -116,6 +119,9 @@ impl Paystack {
                 bearer_auth: formatted_bearer.to_string(),
             },
             disputes: Disputes {
+                bearer_auth: formatted_bearer.to_string(),
+            },
+            verification: Verification {
                 bearer_auth: formatted_bearer.to_string(),
             },
         }

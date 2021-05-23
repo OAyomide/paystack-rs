@@ -92,9 +92,9 @@ pub struct ExportDisputesBody<'a> {
     pub per_page: Option<i64>,
     /// Specify exactly what page you want to retrieve. If not specify we use a default value of 1.
     pub page: Option<i128>,
-    pub transaction: &'a str,
+    pub transaction: Option<&'a str>,
     /// Dispute Status. Acceptable values: `{ awaiting-merchant-feedback | awaiting-bank-feedback | pending | resolved }`
-    pub status: DisputeStatus,
+    pub status: Option<DisputeStatus>,
 }
 
 const DISPUTE_URL: &str = "https://api.paystack.co/dispute";
