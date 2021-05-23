@@ -6,6 +6,7 @@ use chrono::{DateTime, Local};
 use reqwest::blocking::Response;
 use serde::Serialize;
 
+/// The Bulk Charges API allows you create and manage multiple recurring payments from your customers
 #[derive(Debug, Default)]
 pub struct BulkCharges {
     pub(crate) bearer_auth: String,
@@ -52,7 +53,6 @@ pub struct FetchChargesInABatchParams {
     pub to: Option<DateTime<Local>>,
 }
 const BULK_CHARGES_URL: &str = "https://api.paystack.co/bulkcharge";
-/// The Bulk Charges API allows you create and manage multiple recurring payments from your customers
 impl BulkCharges {
     // FIXME: the docs dont say what it is here, hence I wont be implementing this method until the docs are clear
     // pub fn initiate_bulk_charges(&self, body: InitiateBulkChargesBody) -> Result<Response, String> {
