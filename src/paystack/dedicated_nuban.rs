@@ -60,8 +60,8 @@ impl DedicatedNuban {
         body: CreateDedicatedAccountBody,
     ) -> Result<Response, String> {
         let res = make_request(
-            self.bearer_auth.clone(),
-            DEDICATED_NUBAN_URL.to_owned(),
+            &self.bearer_auth,
+            DEDICATED_NUBAN_URL,
             Some(body),
             REQUEST::POST,
         );
@@ -72,30 +72,21 @@ impl DedicatedNuban {
         &self,
         params: Option<ListDedicatedAccountsParams>,
     ) -> Result<Response, String> {
-        let res = make_get_request(
-            self.bearer_auth.clone(),
-            DEDICATED_NUBAN_URL.to_owned(),
-            Some(params),
-        );
+        let res = make_get_request(&self.bearer_auth, DEDICATED_NUBAN_URL, Some(params));
         return res;
     }
 
     /// Get details of a dedicated account on your integration.
     pub fn fetch_dedicated_account(&self, id: &str) -> Result<Response, String> {
-        let url = format!("{}/{}", DEDICATED_NUBAN_URL.to_owned(), id);
-        let res = make_get_request(self.bearer_auth.clone(), url, None::<String>);
+        let url = format!("{}/{}", DEDICATED_NUBAN_URL, id);
+        let res = make_get_request(&self.bearer_auth, &url, None::<String>);
         return res;
     }
 
     /// Deactivate a dedicated account on your integration.
     pub fn deactivate_dedicated_account(&self, id: &str) -> Result<Response, String> {
-        let url = format!("{}/{}", DEDICATED_NUBAN_URL.to_owned(), id);
-        let res = make_request(
-            self.bearer_auth.clone(),
-            url,
-            None::<String>,
-            REQUEST::DELETE,
-        );
+        let url = format!("{}/{}", DEDICATED_NUBAN_URL, id);
+        let res = make_request(&self.bearer_auth, &url, None::<String>, REQUEST::DELETE);
         return res;
     }
 
@@ -105,30 +96,32 @@ impl DedicatedNuban {
         body: SplitDedicatedAccountTxBody,
     ) -> Result<Response, String> {
         let res = make_request(
-            self.bearer_auth.clone(),
-            DEDICATED_NUBAN_URL.to_owned(),
+            &self.bearer_auth,
+            &DEDICATED_NUBAN_URL,
             Some(body),
             REQUEST::POST,
         );
         return res;
     }
 
+    /// If you've previously set up split payment for transactions on a dedicated account, you can remove it with this endpoint
     pub fn remove_split_from_dedicated_acct(
         &self,
         body: RemoveSplitFromDedicatedAcctBody,
     ) -> Result<Response, String> {
         let res = make_request(
-            self.bearer_auth.clone(),
-            DEDICATED_NUBAN_URL.to_owned(),
+            &self.bearer_auth,
+            DEDICATED_NUBAN_URL,
             Some(body),
             REQUEST::DELETE,
         );
         return res;
     }
 
+    /// Get available bank providers for Dedicated NUBAN
     pub fn fetch_bank_providers(&self) -> Result<Response, String> {
-        let url = format!("{}/available_providers", DEDICATED_NUBAN_URL.to_owned());
-        let res = make_get_request(self.bearer_auth.clone(), url, None::<String>);
+        let url = format!("{}/available_providers", DEDICATED_NUBAN_URL);
+        let res = make_get_request(&self.bearer_auth, &url, None::<String>);
         return res;
     }
 }
