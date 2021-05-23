@@ -11,6 +11,7 @@ pub mod subscription;
 pub mod transactions;
 pub mod transactions_split;
 pub mod transfer_recipients;
+pub mod transfers;
 
 use dedicated_nuban::DedicatedNuban;
 use invoices::Invoices;
@@ -24,6 +25,8 @@ use subscription::Subscription;
 use transactions::Transaction;
 use transactions_split::TransactionSplit;
 use transfer_recipients::TransferRecipients;
+use transfers::Transfers;
+
 #[derive(Default)]
 pub struct Paystack {
     pub transaction: Transaction,
@@ -38,6 +41,7 @@ pub struct Paystack {
     pub invoices: Invoices,
     pub settlements: Settlements,
     pub transfer_recipients: TransferRecipients,
+    pub transfers: Transfers,
 }
 
 impl Paystack {
@@ -79,6 +83,9 @@ impl Paystack {
                 bearer_auth: formatted_bearer.to_string(),
             },
             transfer_recipients: TransferRecipients {
+                bearer_auth: formatted_bearer.to_string(),
+            },
+            transfers: Transfers {
                 bearer_auth: formatted_bearer.to_string(),
             },
         }
