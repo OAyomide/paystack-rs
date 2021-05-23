@@ -5,6 +5,7 @@ pub mod customers;
 pub mod dedicated_nuban;
 pub mod disputes;
 pub mod invoices;
+pub mod miscellaneous;
 pub mod payment_pages;
 pub mod plans;
 pub mod products;
@@ -25,6 +26,7 @@ use control_panel::ControlPanel;
 use dedicated_nuban::DedicatedNuban;
 use disputes::Disputes;
 use invoices::Invoices;
+use miscellaneous::Miscellaneous;
 use payment_pages::PaymentPages;
 use plans::Plans;
 use products::Products;
@@ -60,6 +62,7 @@ pub struct Paystack {
     pub charge: Charge,
     pub disputes: Disputes,
     pub verification: Verification,
+    pub miscellaneous: Miscellaneous,
 }
 
 impl Paystack {
@@ -122,6 +125,9 @@ impl Paystack {
                 bearer_auth: formatted_bearer.to_string(),
             },
             verification: Verification {
+                bearer_auth: formatted_bearer.to_string(),
+            },
+            miscellaneous: Miscellaneous {
                 bearer_auth: formatted_bearer.to_string(),
             },
         }
