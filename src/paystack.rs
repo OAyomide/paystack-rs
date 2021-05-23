@@ -1,4 +1,5 @@
 pub mod bulk_charges;
+pub mod charge;
 pub mod control_panel;
 pub mod customers;
 pub mod dedicated_nuban;
@@ -17,6 +18,7 @@ pub mod transfers;
 pub mod transfers_control;
 
 use bulk_charges::BulkCharges;
+use charge::Charge;
 use control_panel::ControlPanel;
 use dedicated_nuban::DedicatedNuban;
 use invoices::Invoices;
@@ -51,6 +53,7 @@ pub struct Paystack {
     pub transfers_control: TransfersControl,
     pub bulk_charges: BulkCharges,
     pub control_panel: ControlPanel,
+    pub charge: Charge,
 }
 
 impl Paystack {
@@ -104,6 +107,9 @@ impl Paystack {
                 bearer_auth: formatted_bearer.to_string(),
             },
             control_panel: ControlPanel {
+                bearer_auth: formatted_bearer.to_string(),
+            },
+            charge: Charge {
                 bearer_auth: formatted_bearer.to_string(),
             },
         }

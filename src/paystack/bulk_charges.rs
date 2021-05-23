@@ -1,7 +1,4 @@
-use crate::{
-    prelude::Status,
-    utils::{make_get_request, make_request, REQUEST},
-};
+use crate::utils::make_get_request;
 use chrono::{DateTime, Local};
 use reqwest::blocking::Response;
 use serde::Serialize;
