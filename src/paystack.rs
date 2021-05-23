@@ -1,3 +1,4 @@
+pub mod bulk_charges;
 pub mod customers;
 pub mod dedicated_nuban;
 pub mod invoices;
@@ -14,6 +15,7 @@ pub mod transfer_recipients;
 pub mod transfers;
 pub mod transfers_control;
 
+use bulk_charges::BulkCharges;
 use dedicated_nuban::DedicatedNuban;
 use invoices::Invoices;
 use payment_pages::PaymentPages;
@@ -45,6 +47,7 @@ pub struct Paystack {
     pub transfer_recipients: TransferRecipients,
     pub transfers: Transfers,
     pub transfers_control: TransfersControl,
+    pub bulk_charges: BulkCharges,
 }
 
 impl Paystack {
@@ -92,6 +95,9 @@ impl Paystack {
                 bearer_auth: formatted_bearer.to_string(),
             },
             transfers_control: TransfersControl {
+                bearer_auth: formatted_bearer.to_string(),
+            },
+            bulk_charges: BulkCharges {
                 bearer_auth: formatted_bearer.to_string(),
             },
         }
