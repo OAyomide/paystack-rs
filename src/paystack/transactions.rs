@@ -91,7 +91,7 @@ pub struct InitializeTransactionBody {
 }
 
 /// struct ListTransactionsQuery
-#[derive(Debug, Serialize)]
+#[derive(Debug, Default, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ListTransactionsParams {
     /// Specify how many records you want to retrieve per page. If not specify we use a default value of 50.
@@ -110,7 +110,7 @@ pub struct ListTransactionsParams {
     pub amount: Option<i128>,
 }
 
-#[derive(Serialize, Debug)]
+#[derive(Serialize, Default, Debug)]
 pub struct ChargeAuthorizationBody {
     /// Amount should be in kobo if currency is NGN, pesewas, if currency is GHS, and cents, if currency is ZAR
     pub amount: String,
@@ -136,7 +136,7 @@ pub struct ChargeAuthorizationBody {
     pub queue: Option<bool>,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Default, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TransactionsTotal {
     /// Specify how many records you want to retrieve per page. If not specify we use a default value of 50.
@@ -153,7 +153,7 @@ pub struct TransactionsTotal {
     pub to: Option<DateTime<Utc>>,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Default, Serialize)]
 pub struct CheckAuthorizationBody {
     /// Amount should be in kobo if currency is NGN, pesewas, if currency is GHS, and cents, if currency is ZAR
     pub amount: String,
@@ -165,7 +165,7 @@ pub struct CheckAuthorizationBody {
     pub currency: Option<Currency>,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Default, Serialize)]
 pub struct PartialDebitBody {
     /// Amount should be in kobo if currency is NGN, pesewas, if currency is GHS, and cents, if currency is ZAR
     pub amount: String,
@@ -211,6 +211,20 @@ pub struct ExportTransactionsBody {
 
 impl Transaction {
     /// Initialize a transaction from your backend
+    /// ```rust
+    /// # use std::env;
+    /// # use paystack_rs::prelude::Paystack;
+    /// use paystack_rs::prelude::InitializeTransactionBody;
+    ///
+    /// # let key = env::var("PAYSTACK_SECRET_KEY").unwrap();
+    /// let paystack = Paystack::new(key);
+    /// let body = InitializeTransactionBody{
+    ///     email: "randomemail@gmail.com".to_string(),
+    ///     amount: 10000,
+    ///     ..Default::default()
+    /// };
+    /// paystack.transaction.initialize_transaction(body);
+    /// ```
     pub fn initialize_transaction(
         &self,
         body: InitializeTransactionBody,
@@ -225,6 +239,14 @@ impl Transaction {
     }
 
     /// verify a transaction. it takes an argument reference which is the reference_id of a transaction you want to verify
+    /// ```rust
+    /// # use std::env;
+    /// # use paystack_rs::prelude::Paystack;
+    ///
+    /// # let key = env::var("PAYSTACK_SECRET_KEY").unwrap();
+    /// let paystack = Paystack::new(key);
+    /// paystack.transaction.verify_transaction("DG4uishudoq90LD".to_string());
+    /// ```
     pub fn verify_transaction(&self, reference: String) -> Result<Response, String> {
         let full_url = format!(
             "{}/transaction/verify/:{}",
@@ -236,11 +258,32 @@ impl Transaction {
     }
 
     /// list_transactions lists all the transactions available
+    /// ```rust
+    /// # use std::env;
+    /// # use paystack_rs::prelude::Paystack;
+    /// use paystack_rs::prelude::ListTransactionsParams;
+    ///
+    /// # let key = env::var("PAYSTACK_SECRET_KEY").unwrap();
+    /// let paystack = Paystack::new(key);
+    /// /// Retrieve 50 transactions per page
+    /// let body = ListTransactionsParams{
+    ///     per_page: Some(50),
+    ///     ..Default::default()
+    /// };
+    /// paystack.transaction.list_transactions(body);
     pub fn list_transactions(&self, body: ListTransactionsParams) -> Result<Response, String> {
         let res = make_get_request(&self.bearer_auth, TRANSACTION_URL, Some(body));
         return res;
     }
 
+    /// ```rust
+    /// # use std::env;
+    /// # use paystack_rs::prelude::Paystack;
+    ///
+    /// # let key = env::var("PAYSTACK_SECRET_KEY").unwrap();
+    /// let paystack = Paystack::new(key);
+    /// paystack.transaction.fetch_transaction(123412);
+    /// ```
     pub fn fetch_transaction(&self, transaction_id: i64) -> Result<Response, String> {
         let url = format!("{}/{}", TRANSACTION_URL, transaction_id);
         let res = make_get_request(&self.bearer_auth, &url, None::<String>);
@@ -248,6 +291,20 @@ impl Transaction {
     }
 
     /// All authorizations marked as reusable can be charged with this endpoint whenever you need to receive payments.
+    /// ```rust
+    /// # use std::env;
+    /// # use paystack_rs::prelude::Paystack;
+    /// use paystack_rs::prelude::ChargeAuthorizationBody;
+    ///
+    /// # let key = env::var("PAYSTACK_SECRET_KEY").unwrap();
+    /// let paystack = Paystack::new(key);
+    /// let body = ChargeAuthorizationBody{
+    ///     amount: "5000".to_string(),
+    ///     email: "randomemail@gmail.com".to_string(),
+    ///     authorization_code: "2aeserqwdEAW".to_string(),
+    ///     ..Default::default()
+    /// };
+    /// paystack.transaction.charge_authorization(body);
     pub fn charge_authorization(
         &self,
         params: ChargeAuthorizationBody,
@@ -268,12 +325,33 @@ impl Transaction {
     ///
     ///
     /// ⚠️ Warning You shouldn't use this endpoint to check a card for sufficient funds if you are going to charge the user immediately. This is because we hold funds when this endpoint is called which can lead to an insufficient funds error.
+    /// ```rust
+    /// # use std::env;
+    /// # use paystack_rs::prelude::Paystack;
+    /// use paystack_rs::prelude::CheckAuthorizationBody;
+    ///
+    /// # let key = env::var("PAYSTACK_SECRET_KEY").unwrap();
+    /// let paystack = Paystack::new(key);
+    /// let body = CheckAuthorizationBody{
+    ///     amount: "5000".to_string(),
+    ///     email: "randomemail@gmail.com".to_string(),
+    ///     authorization_code: "2aeserqwdEAW".to_string(),
+    ///     ..Default::default()
+    /// };
+    /// paystack.transaction.check_authorization(body);
     pub fn check_authorization(&self, param: CheckAuthorizationBody) -> Result<Response, String> {
         let full_url = CHARGE_AUTHORIZATION_URL;
         let res = make_request(&self.bearer_auth, full_url, Some(param), REQUEST::POST);
         return res;
     }
 
+    /// ```rust
+    /// # use std::env;
+    /// # use paystack_rs::prelude::Paystack;
+    ///
+    /// # let key = env::var("PAYSTACK_SECRET_KEY").unwrap();
+    /// let paystack = Paystack::new(key);
+    /// paystack.transaction.view_transaction_timeline("DG4uishudoq90LD".to_string());
     pub fn view_transaction_timeline(&self, id: String) -> Result<Response, String> {
         let full_url = format!("{}/timeline/{}", TRANSACTION_URL, id).to_string();
         let res = make_get_request(&self.bearer_auth, &full_url, None::<String>);
@@ -281,6 +359,14 @@ impl Transaction {
     }
 
     /// Total amount received on your account
+    /// ```rust
+    /// # use std::env;
+    /// # use paystack_rs::prelude::Paystack;
+    ///
+    /// # let key = env::var("PAYSTACK_SECRET_KEY").unwrap();
+    /// let paystack = Paystack::new(key);
+    /// /// Retrieve total transactions
+    /// paystack.transaction.transactions_total(None);
     pub fn transactions_total(
         &self,
         params: Option<TransactionsTotal>,
@@ -291,6 +377,14 @@ impl Transaction {
     }
 
     /// Export transactions carried out on your integration.
+    /// ```rust
+    /// # use std::env;
+    /// # use paystack_rs::prelude::Paystack;
+    ///
+    /// # let key = env::var("PAYSTACK_SECRET_KEY").unwrap();
+    /// let paystack = Paystack::new(key);
+    /// /// Retrieve total transactions
+    /// paystack.transaction.export_transactions(None);
     pub fn export_transactions(
         &self,
         params: Option<ExportTransactionsBody>,
@@ -301,6 +395,20 @@ impl Transaction {
     }
 
     /// Retrieve part of a payment from a customer
+    /// ```rust
+    /// # use std::env;
+    /// # use paystack_rs::prelude::Paystack;
+    /// use paystack_rs::prelude::PartialDebitBody;
+    ///
+    /// # let key = env::var("PAYSTACK_SECRET_KEY").unwrap();
+    /// let paystack = Paystack::new(key);
+    /// let body = PartialDebitBody{
+    ///     amount: "5000".to_string(),
+    ///     email: "randomemail@gmail.com".to_string(),
+    ///     authorization_code: "2aeserqwdEAW".to_string(),
+    ///     ..Default::default()
+    /// };
+    /// paystack.transaction.partial_debit(body);
     pub fn partial_debit(&self, body: PartialDebitBody) -> Result<Response, String> {
         let full_url = format!("{}/partial_debit", TRANSACTION_URL);
         let res = make_request(&self.bearer_auth, &full_url, Some(body), REQUEST::POST);
