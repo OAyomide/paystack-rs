@@ -20,6 +20,17 @@ pub mod transfers;
 pub mod transfers_control;
 pub mod verification;
 
+/// Initialize a struct with bearer auth key
+#[macro_export]
+macro_rules! auth_init {
+    ($Foo: ident, $auth: expr) => {
+        $Foo {
+            bearer_auth: $auth.to_string(),
+            ..Default::default()
+        }
+    };
+}
+
 use bulk_charges::BulkCharges;
 use charge::Charge;
 use control_panel::ControlPanel;
@@ -69,67 +80,26 @@ impl Paystack {
     pub fn new(key: String) -> Paystack {
         let formatted_bearer = format!("Bearer {}", key);
         Paystack {
-            transaction: Transaction {
-                bearer_auth: formatted_bearer.to_string(),
-                ..Default::default()
-            },
-            transaction_split: TransactionSplit {
-                bearer_auth: formatted_bearer.to_string(),
-            },
-            refund: Refunds {
-                bearer_auth: formatted_bearer.to_string(),
-            },
-            subaccounts: Subaccount {
-                bearer_auth: formatted_bearer.to_string(),
-            },
-            dedicated_nuban: DedicatedNuban {
-                bearer_auth: formatted_bearer.to_string(),
-            },
-            plans: Plans {
-                bearer_auth: formatted_bearer.to_string(),
-            },
-            subscription: Subscription {
-                bearer_auth: formatted_bearer.to_string(),
-            },
-            products: Products {
-                bearer_auth: formatted_bearer.to_string(),
-            },
-            payment_pages: PaymentPages {
-                bearer_auth: formatted_bearer.to_string(),
-            },
-            invoices: Invoices {
-                bearer_auth: formatted_bearer.to_string(),
-            },
-            settlements: Settlements {
-                bearer_auth: formatted_bearer.to_string(),
-            },
-            transfer_recipients: TransferRecipients {
-                bearer_auth: formatted_bearer.to_string(),
-            },
-            transfers: Transfers {
-                bearer_auth: formatted_bearer.to_string(),
-            },
-            transfers_control: TransfersControl {
-                bearer_auth: formatted_bearer.to_string(),
-            },
-            bulk_charges: BulkCharges {
-                bearer_auth: formatted_bearer.to_string(),
-            },
-            control_panel: ControlPanel {
-                bearer_auth: formatted_bearer.to_string(),
-            },
-            charge: Charge {
-                bearer_auth: formatted_bearer.to_string(),
-            },
-            disputes: Disputes {
-                bearer_auth: formatted_bearer.to_string(),
-            },
-            verification: Verification {
-                bearer_auth: formatted_bearer.to_string(),
-            },
-            miscellaneous: Miscellaneous {
-                bearer_auth: formatted_bearer.to_string(),
-            },
+            transaction: auth_init!(Transaction, formatted_bearer),
+            transaction_split: auth_init!(TransactionSplit, formatted_bearer),
+            refund: auth_init!(Refunds, formatted_bearer),
+            subaccounts: auth_init!(Subaccount, formatted_bearer),
+            dedicated_nuban: auth_init!(DedicatedNuban, formatted_bearer),
+            plans: auth_init!(Plans, formatted_bearer),
+            subscription: auth_init!(Subscription, formatted_bearer),
+            products: auth_init!(Products, formatted_bearer),
+            invoices: auth_init!(Invoices, formatted_bearer),
+            settlements: auth_init!(Settlements, formatted_bearer),
+            transfer_recipients: auth_init!(TransferRecipients, formatted_bearer),
+            transfers: auth_init!(Transfers, formatted_bearer),
+            transfers_control: auth_init!(TransfersControl, formatted_bearer),
+            bulk_charges: auth_init!(BulkCharges, formatted_bearer),
+            control_panel: auth_init!(ControlPanel, formatted_bearer),
+            disputes: auth_init!(Disputes, formatted_bearer),
+            verification: auth_init!(Verification, formatted_bearer),
+            miscellaneous: auth_init!(Miscellaneous, formatted_bearer),
+            charge: auth_init!(Charge, formatted_bearer),
+            payment_pages: auth_init!(PaymentPages, formatted_bearer),
         }
     }
 }

@@ -1,5 +1,7 @@
 # Paystack-rs
 
+[![Build Status](https://github.com/OAyomide/paystack-rs/workflows/Build%20and%20Test/badge.svg)](https://github.com/OAyomide/paystack-rs/actions)
+
 A rust crate that wraps around the paystack REST API.
 
 ## Whats working and whats yet to be done?
