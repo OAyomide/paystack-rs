@@ -94,7 +94,8 @@ where
         }
         _ => {
             // the below is meant as a light joke.. chill out pls
-            println!("Dunno... Looks Ok but since its not an error i specially check for, here is your result, man... or woman... or they/them");
+            println!("If the error indicating a missing 'data' field means that the 'plan_id' you are using is invalid. Please verify the 'plan_id' on your Paystack dashboard, ensuring it matches either the live or test environment.");
+
             return Ok(res);
         }
     };
